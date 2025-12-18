@@ -56,20 +56,20 @@
 
 ### 2.2 Contrato TypeScript do Evento
 
-- [ ] **Criar interfaces do contrato BudgetCreatedEvent**
-  - [ ] Criar arquivo `packages/shared/src/events/budget-created.event.ts`
-  - [ ] Definir interface `BudgetItemPayload` conforme seção 1.1.2 do plano
-  - [ ] Definir interface `BudgetCreatedPayload` conforme seção 1.1.2 do plano
-  - [ ] Definir interface `EventMetadata` conforme seção 1.1.2 do plano
-  - [ ] Definir interface `BudgetCreatedEvent` conforme seção 1.1.2 do plano
-  - [ ] Adicionar comentário JSDoc explicando o propósito do evento
+- [x] **Criar interfaces do contrato BudgetCreatedEvent**
+  - [x] Criar arquivo `packages/shared/src/events/budget-created.event.ts`
+  - [x] Definir interface `BudgetItemPayload` conforme seção 1.1.2 do plano
+  - [x] Definir interface `BudgetCreatedPayload` conforme seção 1.1.2 do plano
+  - [x] Definir interface `EventMetadata` conforme seção 1.1.2 do plano
+  - [x] Definir interface `BudgetCreatedEvent` conforme seção 1.1.2 do plano
+  - [x] Adicionar comentário JSDoc explicando o propósito do evento
 
-- [ ] **Implementar validação com Zod (opcional)**
-  - [ ] Instalar dependência `zod` no pacote shared: `npm install zod`
-  - [ ] Criar schema `BudgetItemPayloadSchema` usando Zod
-  - [ ] Criar schema `BudgetCreatedPayloadSchema` usando Zod
-  - [ ] Criar schema `BudgetCreatedEventSchema` usando Zod
-  - [ ] Exportar schemas para uso em validação
+- [x] **Implementar validação com Zod (opcional)**
+  - [x] Instalar dependência `zod` no pacote shared: `npm install zod`
+  - [x] Criar schema `BudgetItemPayloadSchema` usando Zod
+  - [x] Criar schema `BudgetCreatedPayloadSchema` usando Zod
+  - [x] Criar schema `BudgetCreatedEventSchema` usando Zod
+  - [x] Exportar schemas para uso em validação
 
 ### 2.3 Domain Events no API Core
 

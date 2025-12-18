@@ -1,0 +1,36 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Rodar lint-staged primeiro
+npx lint-staged
+
+# Detectar possíveis secrets no código (após lint-staged passar)
+# Verifica apenas arquivos TypeScript/JavaScript por padrões muito específicos
+STAGED_CODE_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.(ts|tsx|js|jsx)$' 2>/dev/null | grep -v 'node_modules' 2>/dev/null | grep -v '\.spec\.' 2>/dev/null | grep -v '\.test\.' 2>/dev/null | grep -v '\.d\.ts$' 2>/dev/null || true)
+
+if [ -n "$STAGED_CODE_FILES" ]; then
+  # Procura por padrões muito específicos: variáveis com valores hardcoded que parecem credenciais
+  # Exemplo: const password = "senha123"; const apiKey = "sk_live_abc";
+  for file in $STAGED_CODE_FILES; do
+    SUSPICIOUS=$(git diff --cached -- "$file" 2>/dev/null | \
+      grep -E "^\+\s*(const|let|var)\s+(password|secret|apiKey|api_key|accessToken|access_token)\s*=\s*['\"][^'\"]{8,}['\"]" 2>/dev/null | \
+      grep -v "process\.env" 2>/dev/null | \
+      grep -v "^\+\s*//" 2>/dev/null | \
+      grep -v "^\+\s*\*" 2>/dev/null | \
+      grep -v "example" 2>/dev/null | \
+      grep -v "placeholder" 2>/dev/null | \
+      grep -v "dummy" 2>/dev/null | \
+      grep -v "test" 2>/dev/null || true)
+    
+    if [ -n "$SUSPICIOUS" ]; then
+      echo "❌ PROIBIDO: Possível credencial hardcoded detectada em $file!"
+      echo ""
+      echo "Padrões suspeitos encontrados:"
+      echo "$SUSPICIOUS" | head -3
+      echo ""
+      echo "Use variáveis de ambiente (process.env.*) ao invés de valores hardcoded."
+      echo "Exemplo correto: const apiKey = process.env.API_KEY;"
+      exit 1
+    fi
+  done
+fi

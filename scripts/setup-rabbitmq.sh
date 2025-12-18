@@ -42,6 +42,22 @@ check_rabbitmq_health() {
     log_info "RabbitMQ está online ✓"
 }
 
+# Função para verificar se exchange existe
+exchange_exists() {
+    local exchange_name=$1
+    local http_code=$(curl -s -o /dev/null -w "%{http_code}" -u "${USERNAME}:${PASSWORD}" \
+        "${RABBITMQ_URL}/api/exchanges/%2F/${exchange_name}")
+    [ "$http_code" -eq 200 ]
+}
+
+# Função para verificar se queue existe
+queue_exists() {
+    local queue_name=$1
+    local http_code=$(curl -s -o /dev/null -w "%{http_code}" -u "${USERNAME}:${PASSWORD}" \
+        "${RABBITMQ_URL}/api/queues/%2F/${queue_name}")
+    [ "$http_code" -eq 200 ]
+}
+
 # Função para criar exchange
 create_exchange() {
     local exchange_name=$1
@@ -60,13 +76,24 @@ create_exchange() {
         }")
     
     local http_code=$(echo "$response" | tail -n1)
+    local response_body=$(echo "$response" | sed '$d')
     
     if [ "$http_code" -eq 201 ] || [ "$http_code" -eq 204 ]; then
         log_info "Exchange ${exchange_name} criada com sucesso ✓"
+        # Aguardar um pouco para garantir que foi processada
+        sleep 0.3
     elif [ "$http_code" -eq 400 ]; then
         log_warn "Exchange ${exchange_name} já existe ou dados inválidos"
+        # Verificar se realmente existe
+        if exchange_exists "${exchange_name}"; then
+            log_info "Exchange ${exchange_name} existe e está acessível ✓"
+        else
+            log_error "Exchange ${exchange_name} não está acessível após criação"
+            exit 1
+        fi
     else
         log_error "Falha ao criar exchange ${exchange_name} (HTTP ${http_code})"
+        log_error "Response: ${response_body}"
         exit 1
     fi
 }
@@ -89,13 +116,24 @@ create_queue() {
         }")
     
     local http_code=$(echo "$response" | tail -n1)
+    local response_body=$(echo "$response" | sed '$d')
     
     if [ "$http_code" -eq 201 ] || [ "$http_code" -eq 204 ]; then
         log_info "Queue ${queue_name} criada com sucesso ✓"
+        # Aguardar um pouco para garantir que foi processada
+        sleep 0.3
     elif [ "$http_code" -eq 400 ]; then
         log_warn "Queue ${queue_name} já existe ou dados inválidos"
+        # Verificar se realmente existe
+        if queue_exists "${queue_name}"; then
+            log_info "Queue ${queue_name} existe e está acessível ✓"
+        else
+            log_error "Queue ${queue_name} não está acessível após criação"
+            exit 1
+        fi
     else
         log_error "Falha ao criar queue ${queue_name} (HTTP ${http_code})"
+        log_error "Response: ${response_body}"
         exit 1
     fi
 }
@@ -108,6 +146,21 @@ create_binding() {
     
     log_info "Criando binding: ${exchange_name} -> ${queue_name} (routing_key: ${routing_key})"
     
+    # Verificar se exchange existe
+    if ! exchange_exists "${exchange_name}"; then
+        log_error "Exchange '${exchange_name}' não existe. Não é possível criar binding."
+        exit 1
+    fi
+    
+    # Verificar se queue existe
+    if ! queue_exists "${queue_name}"; then
+        log_error "Queue '${queue_name}' não existe. Não é possível criar binding."
+        exit 1
+    fi
+    
+    # Aguardar um pouco para garantir que recursos estão prontos
+    sleep 0.5
+    
     local response=$(curl -s -w "\n%{http_code}" -u "${USERNAME}:${PASSWORD}" -X POST \
         "${RABBITMQ_URL}/api/bindings/%2F/e/${exchange_name}/q/${queue_name}" \
         -H "Content-Type: application/json" \
@@ -116,13 +169,19 @@ create_binding() {
         }")
     
     local http_code=$(echo "$response" | tail -n1)
+    local response_body=$(echo "$response" | sed '$d')
     
     if [ "$http_code" -eq 201 ] || [ "$http_code" -eq 204 ]; then
         log_info "Binding criado com sucesso ✓"
     elif [ "$http_code" -eq 400 ]; then
-        log_warn "Binding já existe ou dados inválidos"
+        log_warn "Binding já existe ou dados inválidos (pode ser ignorado)"
+    elif [ "$http_code" -eq 404 ]; then
+        log_error "Falha ao criar binding: Exchange '${exchange_name}' ou Queue '${queue_name}' não encontrada"
+        log_error "Response: ${response_body}"
+        exit 1
     else
         log_error "Falha ao criar binding (HTTP ${http_code})"
+        log_error "Response: ${response_body}"
         exit 1
     fi
 }

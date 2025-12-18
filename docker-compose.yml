@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: cotador_db
+    environment:
+      POSTGRES_USER: cotador_user
+      POSTGRES_PASSWORD: n)M[0pC24+{Z
+      POSTGRES_DB: cotador_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cotador-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: cotador_mq
+    environment:
+      RABBITMQ_DEFAULT_USER: cotador_user
+      RABBITMQ_DEFAULT_PASS: 81Nw#I6+8an_
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - cotador-network
+
+  redis:
+    image: redis:alpine
+    container_name: cotador_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - cotador-network
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+
+networks:
+  cotador-network:
+    driver: bridge

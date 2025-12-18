@@ -48,11 +48,11 @@
 
 ### 2.1 Estrutura do Pacote Compartilhado
 
-- [ ] **Criar pacote compartilhado para contratos**
-  - [ ] Criar diretório `packages/shared/src/events/`
-  - [ ] Criar arquivo `packages/shared/package.json` com configuração básica
-  - [ ] Criar arquivo `packages/shared/tsconfig.json` com configuração TypeScript
-  - [ ] Configurar path mapping `@cotador/shared` no `tsconfig.json` da raiz do monorepo
+- [x] **Criar pacote compartilhado para contratos**
+  - [x] Criar diretório `packages/shared/src/events/`
+  - [x] Criar arquivo `packages/shared/package.json` com configuração básica
+  - [x] Criar arquivo `packages/shared/tsconfig.json` com configuração TypeScript
+  - [x] Configurar path mapping `@cotador/shared` no `tsconfig.json` da raiz do monorepo
 
 ### 2.2 Contrato TypeScript do Evento
 

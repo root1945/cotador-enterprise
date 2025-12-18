@@ -32,11 +32,15 @@
   - [x] Implementar retry logic para verificação de recursos
   - [x] Melhorar tratamento de erros HTTP 400 e 404
 
-- [ ] **Criar script de monitoramento de DLQ**
-  - [ ] Criar arquivo `scripts/monitor-dlq.sh`
-  - [ ] Implementar consulta à API do RabbitMQ para obter tamanho da DLQ
-  - [ ] Adicionar lógica de alerta quando DLQ > 10 mensagens
-  - [ ] Tornar script executável: `chmod +x scripts/monitor-dlq.sh`
+- [x] **Criar script de monitoramento de DLQ**
+  - [x] Criar arquivo `scripts/monitor-dlq.sh`
+  - [x] Implementar consulta à API do RabbitMQ para obter tamanho da DLQ
+  - [x] Adicionar lógica de alerta quando DLQ > 10 mensagens
+  - [x] Tornar script executável: `chmod +x scripts/monitor-dlq.sh`
+  - [x] Adicionar suporte a variáveis de ambiente para configuração
+  - [x] Implementar verificação de saúde do RabbitMQ
+  - [x] Adicionar suporte opcional a jq para parsing robusto de JSON
+  - [x] Exit code 1 quando threshold é excedido (útil para sistemas de monitoramento)
 
 ---
 

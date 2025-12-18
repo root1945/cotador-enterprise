@@ -42,20 +42,50 @@ check_rabbitmq_health() {
     log_info "RabbitMQ está online ✓"
 }
 
-# Função para verificar se exchange existe
+# Função para verificar se exchange existe (com retry)
 exchange_exists() {
     local exchange_name=$1
-    local http_code=$(curl -s -o /dev/null -w "%{http_code}" -u "${USERNAME}:${PASSWORD}" \
-        "${RABBITMQ_URL}/api/exchanges/%2F/${exchange_name}")
-    [ "$http_code" -eq 200 ]
+    local max_attempts=3
+    local attempt=1
+    
+    while [ $attempt -le $max_attempts ]; do
+        local http_code=$(curl -s -o /dev/null -w "%{http_code}" -u "${USERNAME}:${PASSWORD}" \
+            "${RABBITMQ_URL}/api/exchanges/%2F/${exchange_name}")
+        
+        if [ "$http_code" -eq 200 ]; then
+            return 0
+        fi
+        
+        if [ $attempt -lt $max_attempts ]; then
+            sleep 0.5
+        fi
+        attempt=$((attempt + 1))
+    done
+    
+    return 1
 }
 
-# Função para verificar se queue existe
+# Função para verificar se queue existe (com retry)
 queue_exists() {
     local queue_name=$1
-    local http_code=$(curl -s -o /dev/null -w "%{http_code}" -u "${USERNAME}:${PASSWORD}" \
-        "${RABBITMQ_URL}/api/queues/%2F/${queue_name}")
-    [ "$http_code" -eq 200 ]
+    local max_attempts=3
+    local attempt=1
+    
+    while [ $attempt -le $max_attempts ]; do
+        local http_code=$(curl -s -o /dev/null -w "%{http_code}" -u "${USERNAME}:${PASSWORD}" \
+            "${RABBITMQ_URL}/api/queues/%2F/${queue_name}")
+        
+        if [ "$http_code" -eq 200 ]; then
+            return 0
+        fi
+        
+        if [ $attempt -lt $max_attempts ]; then
+            sleep 0.5
+        fi
+        attempt=$((attempt + 1))
+    done
+    
+    return 1
 }
 
 # Função para criar exchange
@@ -83,12 +113,24 @@ create_exchange() {
         # Aguardar um pouco para garantir que foi processada
         sleep 0.3
     elif [ "$http_code" -eq 400 ]; then
-        log_warn "Exchange ${exchange_name} já existe ou dados inválidos"
-        # Verificar se realmente existe
+        log_warn "Exchange ${exchange_name} retornou HTTP 400 (já existe ou dados inválidos)"
+        log_info "Verificando se a exchange existe..."
+        
+        # Aguardar um pouco antes de verificar (pode ser questão de timing)
+        sleep 0.5
+        
+        # Verificar se realmente existe (com retry interno)
         if exchange_exists "${exchange_name}"; then
             log_info "Exchange ${exchange_name} existe e está acessível ✓"
+            log_warn "Nota: A exchange pode ter configurações diferentes das solicitadas"
+            log_warn "Isso é normal se a exchange já foi criada anteriormente"
         else
-            log_error "Exchange ${exchange_name} não está acessível após criação"
+            log_error "Exchange ${exchange_name} não está acessível"
+            log_error "Isso pode indicar que:"
+            log_error "  1. A exchange não existe"
+            log_error "  2. Há um problema de permissões"
+            log_error "  3. Os dados fornecidos são inválidos"
+            log_error "Response: ${response_body}"
             exit 1
         fi
     else
@@ -123,12 +165,24 @@ create_queue() {
         # Aguardar um pouco para garantir que foi processada
         sleep 0.3
     elif [ "$http_code" -eq 400 ]; then
-        log_warn "Queue ${queue_name} já existe ou dados inválidos"
-        # Verificar se realmente existe
+        log_warn "Queue ${queue_name} retornou HTTP 400 (já existe ou dados inválidos)"
+        log_info "Verificando se a queue existe..."
+        
+        # Aguardar um pouco antes de verificar (pode ser questão de timing)
+        sleep 0.5
+        
+        # Verificar se realmente existe (com retry interno)
         if queue_exists "${queue_name}"; then
             log_info "Queue ${queue_name} existe e está acessível ✓"
+            log_warn "Nota: A queue pode ter configurações diferentes das solicitadas"
+            log_warn "Isso é normal se a queue já foi criada anteriormente"
         else
-            log_error "Queue ${queue_name} não está acessível após criação"
+            log_error "Queue ${queue_name} não está acessível"
+            log_error "Isso pode indicar que:"
+            log_error "  1. A queue não existe"
+            log_error "  2. Há um problema de permissões"
+            log_error "  3. Os dados fornecidos são inválidos"
+            log_error "Response: ${response_body}"
             exit 1
         fi
     else

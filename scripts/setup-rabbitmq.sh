@@ -144,18 +144,21 @@ create_exchange() {
 create_queue() {
     local queue_name=$1
     local durable=${2:-true}
-    local arguments=${3:-{}}
+    local arguments_json=${3:-"{}"}
     
     log_info "Criando queue: ${queue_name}"
+    
+    # Construir JSON de forma segura usando printf para evitar problemas de escape
+    local json_payload=$(printf '{
+        "durable": %s,
+        "auto_delete": false,
+        "arguments": %s
+    }' "${durable}" "${arguments_json}")
     
     local response=$(curl -s -w "\n%{http_code}" -u "${USERNAME}:${PASSWORD}" -X PUT \
         "${RABBITMQ_URL}/api/queues/%2F/${queue_name}" \
         -H "Content-Type: application/json" \
-        -d "{
-            \"durable\": ${durable},
-            \"auto_delete\": false,
-            \"arguments\": ${arguments}
-        }")
+        -d "${json_payload}")
     
     local http_code=$(echo "$response" | tail -n1)
     local response_body=$(echo "$response" | sed '$d')
@@ -252,11 +255,7 @@ create_exchange "cotador.events" "topic" true
 create_exchange "cotador.dlx" "topic" true
 
 # 3. Criar Queue: budget.created (durable: true, com TTL de 24h e DLX configurado)
-create_queue "budget.created" true '{
-    "x-message-ttl": 86400000,
-    "x-dead-letter-exchange": "cotador.dlx",
-    "x-dead-letter-routing-key": "budget.created.dlq"
-}'
+create_queue "budget.created" true '{"x-message-ttl":86400000,"x-dead-letter-exchange":"cotador.dlx","x-dead-letter-routing-key":"budget.created.dlq"}'
 
 # 4. Criar Queue: budget.pdf.ready (durable: true)
 create_queue "budget.pdf.ready" true

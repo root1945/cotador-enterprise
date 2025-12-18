@@ -1,0 +1,16 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Validar formato de commit (Conventional Commits)
+commit_regex='^(feat|fix|docs|style|refactor|test|chore|perf|ci)(\(.+\))?: .{1,}'
+
+if ! grep -qE "$commit_regex" "$1"; then
+    echo "❌ Formato de commit inválido!"
+    echo ""
+    echo "Use o formato Conventional Commits:"
+    echo "  feat(scope): descrição"
+    echo "  fix(scope): descrição"
+    echo ""
+    echo "Tipos permitidos: feat, fix, docs, style, refactor, test, chore, perf, ci"
+    exit 1
+fi

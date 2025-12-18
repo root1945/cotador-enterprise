@@ -12,25 +12,35 @@
 
 ### 1.1 Configuração de Ambiente e Scripts
 
-- [ ] **Criar script de setup do RabbitMQ**
-  - [ ] Criar arquivo `scripts/setup-rabbitmq.sh`
-  - [ ] Adicionar shebang `#!/bin/bash` no início do script
-  - [ ] Definir variáveis de ambiente: `RABBITMQ_URL`, `USERNAME`, `PASSWORD`
-  - [ ] Adicionar comando curl para criar Exchange `cotador.events` (tipo: topic, durable: true)
-  - [ ] Adicionar comando curl para criar Queue `budget.created` (durable: true, com TTL de 24h)
-  - [ ] Adicionar comando curl para criar Queue `budget.pdf.ready` (durable: true)
-  - [ ] Adicionar comando curl para criar Dead Letter Exchange `cotador.dlx` (tipo: topic)
-  - [ ] Adicionar comando curl para criar Dead Letter Queue `budget.created.dlq` (durable: true)
-  - [ ] Adicionar comando curl para criar binding `budget.created.*` → `budget.created`
-  - [ ] Adicionar comando curl para criar binding `budget.created.dlq` → `budget.created.dlq`
-  - [ ] Adicionar mensagem de sucesso no final do script
-  - [ ] Tornar script executável: `chmod +x scripts/setup-rabbitmq.sh`
+- [x] **Criar script de setup do RabbitMQ**
+  - [x] Criar arquivo `scripts/setup-rabbitmq.sh`
+  - [x] Adicionar shebang `#!/bin/bash` no início do script
+  - [x] Definir variáveis de ambiente: `RABBITMQ_URL`, `USERNAME`, `PASSWORD`
+  - [x] Adicionar comando curl para criar Exchange `cotador.events` (tipo: topic, durable: true)
+  - [x] Adicionar comando curl para criar Queue `budget.created` (durable: true, com TTL de 24h)
+  - [x] Adicionar comando curl para criar Queue `budget.pdf.ready` (durable: true)
+  - [x] Adicionar comando curl para criar Dead Letter Exchange `cotador.dlx` (tipo: topic)
+  - [x] Adicionar comando curl para criar Dead Letter Queue `budget.created.dlq` (durable: true)
+  - [x] Adicionar comando curl para criar binding `budget.created.*` → `budget.created`
+  - [x] Adicionar comando curl para criar binding `budget.pdf.ready.*` → `budget.pdf.ready`
+  - [x] Adicionar comando curl para criar binding `budget.created.dlq` → `budget.created.dlq`
+  - [x] Adicionar mensagem de sucesso no final do script
+  - [x] Tornar script executável: `chmod +x scripts/setup-rabbitmq.sh`
+  - [x] Adicionar verificação de saúde do RabbitMQ antes de executar
+  - [x] Implementar tratamento de erros básico
+  - [x] Adicionar suporte a variáveis de ambiente para configuração
+  - [x] Implementar retry logic para verificação de recursos
+  - [x] Melhorar tratamento de erros HTTP 400 e 404
 
-- [ ] **Criar script de monitoramento de DLQ**
-  - [ ] Criar arquivo `scripts/monitor-dlq.sh`
-  - [ ] Implementar consulta à API do RabbitMQ para obter tamanho da DLQ
-  - [ ] Adicionar lógica de alerta quando DLQ > 10 mensagens
-  - [ ] Tornar script executável: `chmod +x scripts/monitor-dlq.sh`
+- [x] **Criar script de monitoramento de DLQ**
+  - [x] Criar arquivo `scripts/monitor-dlq.sh`
+  - [x] Implementar consulta à API do RabbitMQ para obter tamanho da DLQ
+  - [x] Adicionar lógica de alerta quando DLQ > 10 mensagens
+  - [x] Tornar script executável: `chmod +x scripts/monitor-dlq.sh`
+  - [x] Adicionar suporte a variáveis de ambiente para configuração
+  - [x] Implementar verificação de saúde do RabbitMQ
+  - [x] Adicionar suporte opcional a jq para parsing robusto de JSON
+  - [x] Exit code 1 quando threshold é excedido (útil para sistemas de monitoramento)
 
 ---
 

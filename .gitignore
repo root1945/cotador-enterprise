@@ -33,3 +33,15 @@ Thumbs.db
 
 # Prisma
 apps/*/generated/
+
+# pnpm
+pnpm-lock.yaml
+.pnpm-store/
+.pnpm-debug.log
+
+# Workspace
+.turbo/
+
+# Backups from migration
+*.npm-backup
+*.backup

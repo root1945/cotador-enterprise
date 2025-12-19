@@ -3,15 +3,29 @@
   "version": "1.0.0",
   "private": true,
   "description": "Plataforma SaaS de alta escala para gestão e precificação de serviços",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
     "prepare": "husky install",
-    "lint": "npm run lint --workspaces",
+    "dev": "pnpm --parallel --filter \"./apps/*\" run start:dev",
+    "dev:api": "pnpm --filter api-core run start:dev",
+    "dev:mobile": "pnpm --filter mobile run start",
+    "build": "pnpm --recursive run build",
+    "build:api": "pnpm --filter api-core run build",
+    "build:mobile": "pnpm --filter mobile run build",
+    "build:shared": "pnpm --filter @cotador/shared run build",
+    "test": "pnpm --recursive run test",
+    "test:api": "pnpm --filter api-core run test",
+    "test:mobile": "pnpm --filter mobile run test",
+    "test:cov": "pnpm --recursive run test:cov",
+    "test:e2e": "pnpm --filter api-core run test:e2e",
+    "lint": "pnpm --recursive run lint",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
-    "test": "npm run test --workspaces"
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
+    "clean": "pnpm --recursive exec rm -rf dist build node_modules && rm -rf node_modules",
+    "db:migrate": "pnpm --filter api-core -- npx prisma migrate dev",
+    "db:migrate:deploy": "pnpm --filter api-core -- npx prisma migrate deploy",
+    "db:studio": "pnpm --filter api-core -- npx prisma studio",
+    "db:generate": "pnpm --filter api-core -- npx prisma generate"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -24,6 +38,7 @@
   },
   "engines": {
     "node": ">=20.0.0",
-    "npm": ">=10.0.0"
-  }
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.3"
 }

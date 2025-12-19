@@ -13,6 +13,7 @@
     "incremental": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -25,9 +26,19 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+
     "baseUrl": "./",
     "paths": {
-      "@cotador/shared": ["packages/shared/src/index.ts"]
+      "@cotador/shared": ["packages/shared/src/index.ts"],
+      "@cotador/shared/*": ["packages/shared/src/*"]
     }
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "**/node_modules",
+    "**/dist"
+  ]
 }

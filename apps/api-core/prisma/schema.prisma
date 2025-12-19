@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Budget {
+  id         String       @id @default(uuid())
+  clientName String
+  total      Decimal      @db.Decimal(10, 2)
+  status     String       @default("draft")
+  createdAt  DateTime     @default(now())
+  items      BudgetItem[]
+
+  @@map("budgets")
+}
+
+model BudgetItem {
+  id          String  @id @default(uuid())
+  description String
+  unitPrice   Decimal @db.Decimal(10, 2)
+  quantity    Int
+  budgetId    String
+  budget      Budget  @relation(fields: [budgetId], references: [id])
+
+  @@map("budget_items")
+}

@@ -13,8 +13,8 @@ Complete this checklist to verify successful migration from npm to pnpm monorepo
 
 ### Repository State
 - [ ] Main repository `.git` exists at root
-- [ ] `apps/api-core/.git` exists (will be merged)
-- [ ] `apps/mobile/.git` exists or directory exists
+- [ ] `apps/api-core/` directory exists
+- [ ] `apps/mobile/` directory exists (if applicable)
 - [ ] `packages/shared/` directory exists
 - [ ] Current package manager is npm (package-lock.json exists)
 
@@ -32,34 +32,18 @@ Complete this checklist to verify successful migration from npm to pnpm monorepo
 - [ ] pnpm accessible from terminal
 
 ### Current State Verification
-- [ ] Git repositories located (3 repos: root, api-core, mobile)
-- [ ] Git histories verified (commit counts noted)
+- [ ] Project structure verified
 - [ ] npm workspaces configuration noted
+- [ ] All applications accessible
 
-## Phase 2: Git History Preservation
+## Phase 2: Cleanup Nested Git Repositories
 
-### api-core History Merge
-- [ ] api-core added as remote
-- [ ] api-core history fetched
-- [ ] Temporary branch created
-- [ ] Directory structure reorganized in history
-- [ ] History merged into main
-- [ ] Merge commit created
-- [ ] Temporary branch deleted
-- [ ] Remote removed
+### Repository Cleanup
 - [ ] `apps/api-core/.git` directory removed
-
-### mobile History Merge
-- [ ] mobile repo checked for commits
-- [ ] mobile history merged (if commits exist)
-- [ ] `apps/mobile/.git` directory removed
-
-### History Verification
-- [ ] Total commit count increased
-- [ ] api-core commits visible: `git log -- apps/api-core`
-- [ ] mobile commits visible: `git log -- apps/mobile`
-- [ ] No nested `.git` directories: `find apps/ packages/ -name ".git"`
-- [ ] Git repository healthy: `git fsck`
+- [ ] `apps/mobile/.git` directory removed (if existed)
+- [ ] No nested `.git` directories found: `find apps/ packages/ -name ".git"`
+- [ ] Main `.git` repository still exists at root
+- [ ] All application files remain intact
 
 ## Phase 3: pnpm Migration
 
@@ -144,12 +128,11 @@ Complete this checklist to verify successful migration from npm to pnpm monorepo
 - [ ] `pnpm ls --depth 0 -r` lists workspace packages
 - [ ] `@cotador/shared` resolves from api-core
 
-### Git History Validation
-- [ ] Total commit count >= original + api-core commits
-- [ ] api-core history preserved (sample commits visible)
-- [ ] mobile history preserved (if applicable)
-- [ ] No nested `.git` directories
-- [ ] `git log --graph` shows merged histories
+### Repository Structure Validation
+- [ ] Single `.git` repository at root
+- [ ] No nested `.git` directories in apps/ or packages/
+- [ ] All applications accessible
+- [ ] Directory structure intact
 - [ ] `git fsck` passes
 
 ### Build Validation
@@ -217,8 +200,7 @@ Complete this checklist to verify successful migration from npm to pnpm monorepo
 ### Remote Push
 - [ ] Push to remote: `git push origin main`
 - [ ] Verify push succeeded
-- [ ] Check GitHub/GitLab for merged history
-- [ ] Verify all commits visible in web UI
+- [ ] Check GitHub/GitLab for updated structure
 
 ## Team Onboarding
 
@@ -249,11 +231,10 @@ Complete this checklist to verify successful migration from npm to pnpm monorepo
 - [ ] Development workflow improved
 - [ ] Cross-package dependencies work
 
-### Git History
-- [ ] 100% of commits from all repos preserved
-- [ ] Full attribution maintained (author, dates)
-- [ ] Commit messages intact
-- [ ] Branch history visible
+### Repository Structure
+- [ ] Single unified repository
+- [ ] Clean monorepo structure
+- [ ] All files accessible
 
 ## Known Issues (If Any)
 
@@ -296,30 +277,27 @@ pnpm --version
 # 2. List workspaces
 pnpm list --depth 0
 
-# 3. Verify Git history
-git log --oneline --graph --all -20
-
-# 4. Check for nested .git
+# 3. Check for nested .git (should be empty)
 find apps/ packages/ -name ".git" -type d
 
-# 5. Test build
+# 4. Test build
 pnpm run build
 
-# 6. Test shared package resolution
+# 5. Test shared package resolution
 cd apps/api-core
 node -e "console.log(require.resolve('@cotador/shared'))"
 cd ../..
 
-# 7. Start development server
+# 6. Start development server
 pnpm run dev:api
 
-# 8. Run tests
+# 7. Run tests
 pnpm run test
 
-# 9. Check linting
+# 8. Check linting
 pnpm run lint
 
-# 10. Verify database connection
+# 9. Verify database connection
 pnpm run db:generate
 ```
 

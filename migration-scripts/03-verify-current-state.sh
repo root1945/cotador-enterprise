@@ -9,30 +9,37 @@ echo "📊 Verifying current state..."
 
 echo ""
 echo "=== Git Repositories ==="
-find . -maxdepth 3 -name ".git" -type d
-
-echo ""
-echo "=== Git History (main) ==="
-git log --oneline -5
-
-echo ""
-echo "=== Git History (api-core) ==="
-if [ -d "apps/api-core/.git" ]; then
-  cd apps/api-core
-  git log --oneline -5
-  cd ../..
+GIT_REPOS=$(find . -maxdepth 3 -name ".git" -type d)
+if [ -z "$GIT_REPOS" ]; then
+  echo "⚠️  No .git directories found"
 else
-  echo "⚠️  No separate .git in apps/api-core"
+  echo "$GIT_REPOS"
 fi
 
 echo ""
-echo "=== Git History (mobile) ==="
-if [ -d "apps/mobile/.git" ]; then
-  cd apps/mobile
-  git log --oneline -5 2>/dev/null || echo "No commits in mobile"
-  cd ../..
+echo "=== Project Structure ==="
+if [ -d "apps/api-core" ]; then
+  echo "✅ apps/api-core exists"
+  if [ -d "apps/api-core/.git" ]; then
+    echo "   ⚠️  Contains nested .git (will be removed)"
+  fi
 else
-  echo "⚠️  No separate .git in apps/mobile"
+  echo "❌ apps/api-core not found"
+fi
+
+if [ -d "apps/mobile" ]; then
+  echo "✅ apps/mobile exists"
+  if [ -d "apps/mobile/.git" ]; then
+    echo "   ⚠️  Contains nested .git (will be removed)"
+  fi
+else
+  echo "ℹ️  apps/mobile not found (optional)"
+fi
+
+if [ -d "packages/shared" ]; then
+  echo "✅ packages/shared exists"
+else
+  echo "❌ packages/shared not found"
 fi
 
 echo ""

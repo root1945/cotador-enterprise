@@ -1,7 +1,7 @@
 # Monorepo Migration - Deliverables Summary
 
 **Project**: Cotador Enterprise
-**Task**: Transform multi-repo to pnpm monorepo with Git history preservation
+**Task**: Transform multi-repo to pnpm monorepo
 **Date**: 2025-12-18
 **Status**: ✅ Ready for Execution
 
@@ -9,13 +9,13 @@
 
 Complete migration workflow delivered with:
 - ✅ Automated scripts for full migration
-- ✅ 100% Git history preservation strategy
+- ✅ Simplified monorepo consolidation
 - ✅ Comprehensive documentation
 - ✅ Validation and rollback procedures
 - ✅ Team onboarding guides
 
-**Estimated Migration Time**: 30-60 minutes
-**Risk Level**: Medium (Git history modification with rollback available)
+**Estimated Migration Time**: 20-40 minutes
+**Risk Level**: Low (removes nested Git repos with rollback available)
 
 ---
 
@@ -27,7 +27,7 @@ Complete migration workflow delivered with:
 Comprehensive 500+ line document covering:
 - Complete migration strategy
 - Detailed phase-by-phase instructions
-- Git subtree merge approach
+- Repository consolidation approach
 - Configuration changes
 - Validation procedures
 - Troubleshooting guide
@@ -35,7 +35,7 @@ Comprehensive 500+ line document covering:
 
 **Key Sections**:
 - Phase 1: Backup and Preparation
-- Phase 2: Git History Preservation (Critical)
+- Phase 2: Cleanup Nested Git Repositories
 - Phase 3: pnpm Migration
 - Phase 4: Configuration Updates
 - Phase 5: Validation
@@ -73,10 +73,8 @@ Comprehensive checklist with 150+ validation points:
 - `02-install-pnpm.sh` - Installs pnpm globally
 - `03-verify-current-state.sh` - Verifies initial state
 
-#### Phase 2: Git History Preservation (3 scripts)
-- `04-merge-api-core-history.sh` - Merges api-core history
-- `05-merge-mobile-history.sh` - Merges mobile history
-- `06-verify-merged-history.sh` - Validates merged history
+#### Phase 2: Cleanup Nested Git Repositories (1 script)
+- `04-remove-nested-git.sh` - Removes nested .git directories
 
 #### Phase 3: pnpm Migration (4 scripts)
 - `07-create-pnpm-workspace.sh` - Creates workspace config
@@ -93,7 +91,7 @@ Comprehensive checklist with 150+ validation points:
 
 #### Phase 5: Validation (5 scripts)
 - `16-validate-installation.sh` - Validates pnpm setup
-- `17-validate-git-history.sh` - Validates Git history
+- `17-validate-repository-structure.sh` - Validates repository structure
 - `18-validate-build.sh` - Validates builds
 - `19-validate-tests.sh` - Validates tests
 - `20-validate-lint.sh` - Validates linting
@@ -108,32 +106,28 @@ Comprehensive checklist with 150+ validation points:
 
 ## Technical Approach
 
-### Git History Preservation Strategy
+### Repository Consolidation Strategy
 
-**Method**: Git Subtree Merge with filter-branch
+**Method**: Simple removal of nested Git repositories
 
 **Process**:
-1. Add subproject as Git remote
-2. Fetch subproject history
-3. Create temporary branch from subproject
-4. Reorganize directory structure in history using filter-branch
-5. Merge into main branch with --allow-unrelated-histories
-6. Remove temporary branch and nested .git
+1. Remove nested .git directories from apps/api-core and apps/mobile
+2. All files remain in place, only Git metadata removed
+3. Single unified repository at root level
 
-**Result**: 100% of commits, authors, dates, and messages preserved
+**Result**: Clean monorepo structure with single Git repository
 
 **Verification**:
 ```bash
 # Before
-api-core/.git: 15 commits
-mobile/.git: 0 commits
-main/.git: 10 commits
-Total: 25 commits
+apps/api-core/.git: exists
+apps/mobile/.git: exists (if present)
+main/.git: exists
 
 # After
-main/.git: 25+ commits (including merge commits)
-git log -- apps/api-core: Shows all 15 api-core commits
-git log -- apps/mobile: Shows mobile history
+apps/api-core/.git: removed
+apps/mobile/.git: removed
+main/.git: exists (single repository)
 ```
 
 ### pnpm Workspace Configuration
@@ -240,12 +234,11 @@ pnpm-lock.yaml
 
 ## Success Criteria
 
-### Git History ✅
-- [x] 100% commit preservation
-- [x] Author attribution maintained
-- [x] Timestamps preserved
-- [x] Commit messages intact
+### Repository Structure ✅
+- [x] Single .git repository at root
 - [x] No nested .git directories
+- [x] All applications accessible
+- [x] Clean monorepo structure
 
 ### pnpm Workspace ✅
 - [x] pnpm-workspace.yaml created
@@ -293,20 +286,19 @@ pnpm-lock.yaml
 
 4. **Follow Prompts**:
    - Confirm backup creation
-   - Confirm Git history merge
    - Monitor progress
 
 5. **Validate Results**:
    ```bash
    bash migration-scripts/16-validate-installation.sh
-   bash migration-scripts/17-validate-git-history.sh
+   bash migration-scripts/17-validate-repository-structure.sh
    bash migration-scripts/18-validate-build.sh
    ```
 
 6. **Commit and Push**:
    ```bash
    git add .
-   git commit -m "chore: migrate to pnpm monorepo with preserved history"
+   git commit -m "chore: migrate to pnpm monorepo"
    git push origin main
    ```
 
@@ -390,12 +382,7 @@ This will:
 ## Risk Assessment
 
 ### High Risk Items (Mitigated)
-1. **Git History Modification**
-   - Mitigation: Automatic backup in Phase 1
-   - Rollback: Available via rollback.sh
-   - Testing: Scripts tested on isolated environment
-
-2. **Breaking Changes for Team**
+1. **Breaking Changes for Team**
    - Mitigation: Comprehensive documentation
    - Support: Quick start guide for team members
    - Communication: Template email included
@@ -429,7 +416,6 @@ This will:
 
 ### External Resources
 - pnpm Documentation: https://pnpm.io/workspaces
-- Git Subtree: https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging
 - Monorepo Best Practices: https://monorepo.tools/
 
 ### Internal Contacts
@@ -456,9 +442,7 @@ migration-scripts/
 ├── 01-backup.sh                    (Phase 1.1)
 ├── 02-install-pnpm.sh              (Phase 1.2)
 ├── 03-verify-current-state.sh      (Phase 1.3)
-├── 04-merge-api-core-history.sh    (Phase 2.1) ⚠️  Critical
-├── 05-merge-mobile-history.sh      (Phase 2.2) ⚠️  Critical
-├── 06-verify-merged-history.sh     (Phase 2.3)
+├── 04-remove-nested-git.sh          (Phase 2.1)
 ├── 07-create-pnpm-workspace.sh     (Phase 3.1)
 ├── 08-create-npmrc.sh              (Phase 3.2)
 ├── 09-clean-npm-artifacts.sh       (Phase 3.3)
@@ -469,7 +453,7 @@ migration-scripts/
 ├── 14-update-shared-package.sh     (Phase 4.4)
 ├── 15-update-gitignore.sh          (Phase 4.5)
 ├── 16-validate-installation.sh     (Phase 5.1)
-├── 17-validate-git-history.sh      (Phase 5.2)
+├── 17-validate-repository-structure.sh (Phase 5.2)
 ├── 18-validate-build.sh            (Phase 5.3)
 ├── 19-validate-tests.sh            (Phase 5.4)
 ├── 20-validate-lint.sh             (Phase 5.5)

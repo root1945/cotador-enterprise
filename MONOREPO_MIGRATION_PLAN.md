@@ -1,4 +1,4 @@
-# Monorepo Migration Plan - npm to pnpm with Git History Preservation
+# Monorepo Migration Plan - npm to pnpm
 
 **Project**: Cotador Enterprise
 **Date**: 2025-12-18
@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-This plan migrates the Cotador Enterprise project from npm workspaces to pnpm workspaces while preserving **100% of Git history** from all repositories (main, api-core, and mobile).
+This plan migrates the Cotador Enterprise project from npm workspaces to pnpm workspaces, consolidating all applications into a unified monorepo structure.
 
 ### Current State
 ```
@@ -24,12 +24,12 @@ cotador-enterprise/ (Git repo)
 ```
 cotador-enterprise/ (unified Git repo)
 ├── apps/
-│   ├── api-core/ (history preserved)
-│   └── mobile/ (history preserved)
+│   ├── api-core/
+│   └── mobile/
 ├── packages/
 │   └── shared/
 ├── pnpm-workspace.yaml
-└── .git (merged histories)
+└── .git (single repository)
 ```
 
 ## Migration Strategy
@@ -38,9 +38,9 @@ cotador-enterprise/ (unified Git repo)
 **Duration**: 5 minutes
 **Risk**: Low
 
-### Phase 2: Git History Preservation
-**Duration**: 15-20 minutes
-**Risk**: Medium (requires careful Git operations)
+### Phase 2: Cleanup Nested Git Repositories
+**Duration**: 2 minutes
+**Risk**: Low
 
 ### Phase 3: pnpm Migration
 **Duration**: 10 minutes
@@ -54,7 +54,7 @@ cotador-enterprise/ (unified Git repo)
 **Duration**: 10 minutes
 **Risk**: Low
 
-**Total Estimated Time**: ~60 minutes
+**Total Estimated Time**: ~40 minutes
 
 ---
 
@@ -119,20 +119,17 @@ echo "=== Git Repositories ==="
 find . -maxdepth 3 -name ".git" -type d
 
 echo ""
-echo "=== Git History (main) ==="
-git log --oneline -5
+echo "=== Project Structure ==="
+ls -la apps/
+ls -la packages/
 
 echo ""
-echo "=== Git History (api-core) ==="
-cd apps/api-core
-git log --oneline -5
-
-echo ""
-echo "=== Git History (mobile) ==="
-cd ../mobile
-git log --oneline -5 2>/dev/null || echo "No commits"
-
-cd /home/victoralencar/Code/cotador-enterprise
+echo "=== Current Package Manager ==="
+if [ -f "package-lock.json" ]; then
+  echo "Using npm (package-lock.json found)"
+else
+  echo "No package-lock.json found"
+fi
 
 echo ""
 echo "✅ Verification complete"
@@ -140,184 +137,49 @@ echo "✅ Verification complete"
 
 ---
 
-## Phase 2: Git History Preservation
+## Phase 2: Cleanup Nested Git Repositories
 
-This is the **most critical phase**. We'll use Git subtree merge strategy to preserve all history.
+This phase removes nested Git repositories to consolidate everything into a single repository.
 
-### 2.1 Strategy: Git Subtree Merge
-
-We'll merge the api-core and mobile repos into the main repo as subdirectories while preserving their complete history.
-
-**Key Concepts:**
-- Use `git remote add` to add subprojects as remotes
-- Use `git fetch` to get their history
-- Use `git read-tree` with `--prefix` to place them in correct directories
-- Use `git merge -s subtree` to merge histories
-
-### 2.2 Merge api-core History
+### 2.1 Remove Nested Git Repositories
 
 ```bash
 #!/bin/bash
-# Script: 04-merge-api-core-history.sh
+# Script: 04-remove-nested-git.sh
 
 set -e
 
 cd /home/victoralencar/Code/cotador-enterprise
 
-echo "🔀 Merging api-core Git history..."
+echo "🧹 Removing nested Git repositories..."
 
-# Step 1: Add api-core as a remote
-echo "Adding api-core as remote..."
-git remote add api-core-repo ./apps/api-core
-
-# Step 2: Fetch api-core history
-echo "Fetching api-core history..."
-git fetch api-core-repo
-
-# Step 3: Create a temporary branch for api-core
-echo "Creating temporary branch..."
-git checkout -b temp-api-core api-core-repo/main || git checkout -b temp-api-core api-core-repo/master
-
-# Step 4: Move all files to apps/api-core subdirectory in history
-echo "Reorganizing directory structure in history..."
-git filter-branch --prune-empty --tree-filter '
-  mkdir -p apps/api-core-temp
-  for file in *; do
-    if [ "$file" != "apps" ]; then
-      mv "$file" apps/api-core-temp/ 2>/dev/null || true
-    fi
-  done
-  if [ -d apps/api-core-temp ]; then
-    mkdir -p apps
-    mv apps/api-core-temp apps/api-core
-  fi
-' HEAD
-
-# Step 5: Switch back to main branch
-echo "Switching back to main branch..."
-git checkout main
-
-# Step 6: Merge api-core history
-echo "Merging api-core history into main..."
-git merge temp-api-core --allow-unrelated-histories -m "chore: merge api-core repository history"
-
-# Step 7: Clean up
-echo "Cleaning up..."
-git branch -D temp-api-core
-git remote remove api-core-repo
-
-# Step 8: Remove old .git directory from api-core
-echo "Removing old .git from apps/api-core..."
-rm -rf apps/api-core/.git
-
-echo "✅ api-core history merged successfully"
-```
-
-### 2.3 Merge mobile History
-
-```bash
-#!/bin/bash
-# Script: 05-merge-mobile-history.sh
-
-set -e
-
-cd /home/victoralencar/Code/cotador-enterprise
-
-echo "🔀 Merging mobile Git history..."
-
-# Check if mobile has any commits
-if [ ! -d "apps/mobile/.git" ]; then
-  echo "⚠️  mobile has no .git directory, skipping..."
-  exit 0
+# Remove api-core .git if it exists
+if [ -d "apps/api-core/.git" ]; then
+  echo "Removing apps/api-core/.git..."
+  rm -rf apps/api-core/.git
+  echo "✅ Removed api-core .git"
 fi
 
-cd apps/mobile
-COMMIT_COUNT=$(git rev-list --count HEAD 2>/dev/null || echo "0")
-cd ../..
-
-if [ "$COMMIT_COUNT" = "0" ]; then
-  echo "⚠️  mobile has no commits, skipping..."
+# Remove mobile .git if it exists
+if [ -d "apps/mobile/.git" ]; then
+  echo "Removing apps/mobile/.git..."
   rm -rf apps/mobile/.git
-  exit 0
+  echo "✅ Removed mobile .git"
 fi
 
-# Step 1: Add mobile as a remote
-echo "Adding mobile as remote..."
-git remote add mobile-repo ./apps/mobile
-
-# Step 2: Fetch mobile history
-echo "Fetching mobile history..."
-git fetch mobile-repo
-
-# Step 3: Create a temporary branch for mobile
-echo "Creating temporary branch..."
-git checkout -b temp-mobile mobile-repo/main || git checkout -b temp-mobile mobile-repo/master
-
-# Step 4: Move all files to apps/mobile subdirectory in history
-echo "Reorganizing directory structure in history..."
-git filter-branch --prune-empty --tree-filter '
-  mkdir -p apps/mobile-temp
-  for file in *; do
-    if [ "$file" != "apps" ]; then
-      mv "$file" apps/mobile-temp/ 2>/dev/null || true
-    fi
-  done
-  if [ -d apps/mobile-temp ]; then
-    mkdir -p apps
-    mv apps/mobile-temp apps/mobile
-  fi
-' HEAD
-
-# Step 5: Switch back to main branch
-echo "Switching back to main branch..."
-git checkout main
-
-# Step 6: Merge mobile history
-echo "Merging mobile history into main..."
-git merge temp-mobile --allow-unrelated-histories -m "chore: merge mobile repository history"
-
-# Step 7: Clean up
-echo "Cleaning up..."
-git branch -D temp-mobile
-git remote remove mobile-repo
-
-# Step 8: Remove old .git directory from mobile
-echo "Removing old .git from apps/mobile..."
-rm -rf apps/mobile/.git
-
-echo "✅ mobile history merged successfully"
-```
-
-### 2.4 Verify Merged History
-
-```bash
-#!/bin/bash
-# Script: 06-verify-merged-history.sh
-
-set -e
-
-cd /home/victoralencar/Code/cotador-enterprise
-
-echo "🔍 Verifying merged Git history..."
+# Verify no nested .git directories remain
+echo ""
+echo "=== Verifying no nested .git directories ==="
+NESTED_GIT=$(find apps/ packages/ -name ".git" -type d | wc -l)
+if [ "$NESTED_GIT" -eq 0 ]; then
+  echo "✅ No nested .git directories found"
+else
+  echo "⚠️  Found $NESTED_GIT nested .git directories:"
+  find apps/ packages/ -name ".git" -type d
+fi
 
 echo ""
-echo "=== All commits in repository ==="
-git log --oneline --all --graph -20
-
-echo ""
-echo "=== Commits affecting apps/api-core ==="
-git log --oneline --all -- apps/api-core | head -10
-
-echo ""
-echo "=== Commits affecting apps/mobile ==="
-git log --oneline --all -- apps/mobile | head -10
-
-echo ""
-echo "=== Check for .git directories (should be none in subdirectories) ==="
-find apps/ packages/ -name ".git" -type d
-
-echo ""
-echo "✅ History verification complete"
+echo "✅ Cleanup complete"
 ```
 
 ---
@@ -726,42 +588,17 @@ echo ""
 echo "✅ Installation validation complete"
 ```
 
-### 5.2 Validate Git History
+### 5.2 Validate Repository Structure
 
 ```bash
 #!/bin/bash
-# Script: 17-validate-git-history.sh
+# Script: 17-validate-repository-structure.sh
 
 set -e
 
 cd /home/victoralencar/Code/cotador-enterprise
 
-echo "🔍 Validating Git history preservation..."
-
-echo ""
-echo "=== Total commit count ==="
-TOTAL_COMMITS=$(git rev-list --count HEAD)
-echo "Total commits: $TOTAL_COMMITS"
-
-echo ""
-echo "=== Commits from api-core history ==="
-API_COMMITS=$(git log --all --oneline --no-merges -- apps/api-core | wc -l)
-echo "api-core commits: $API_COMMITS"
-
-echo ""
-echo "=== Commits from mobile history ==="
-MOBILE_COMMITS=$(git log --all --oneline --no-merges -- apps/mobile | wc -l)
-echo "mobile commits: $MOBILE_COMMITS"
-
-echo ""
-echo "=== Sample commits from each source ==="
-echo ""
-echo "📁 api-core history:"
-git log --oneline --no-merges -- apps/api-core | head -5
-
-echo ""
-echo "📁 mobile history:"
-git log --oneline --no-merges -- apps/mobile | head -5
+echo "🔍 Validating repository structure..."
 
 echo ""
 echo "=== Verify no nested .git directories ==="
@@ -771,10 +608,36 @@ if [ "$NESTED_GIT" -eq 0 ]; then
 else
   echo "❌ Found $NESTED_GIT nested .git directories"
   find apps/ packages/ -name ".git" -type d
+  exit 1
 fi
 
 echo ""
-echo "✅ Git history validation complete"
+echo "=== Verify directory structure ==="
+if [ -d "apps/api-core" ]; then
+  echo "✅ apps/api-core exists"
+else
+  echo "❌ apps/api-core not found"
+  exit 1
+fi
+
+if [ -d "packages/shared" ]; then
+  echo "✅ packages/shared exists"
+else
+  echo "❌ packages/shared not found"
+  exit 1
+fi
+
+echo ""
+echo "=== Verify main .git exists ==="
+if [ -d ".git" ]; then
+  echo "✅ Main .git repository exists"
+else
+  echo "❌ Main .git repository not found"
+  exit 1
+fi
+
+echo ""
+echo "✅ Repository structure validation complete"
 ```
 
 ### 5.3 Validate Build
@@ -859,12 +722,12 @@ PROJECT_DIR="/home/victoralencar/Code/cotador-enterprise"
 
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  Cotador Enterprise - Monorepo Migration                     ║"
-echo "║  npm workspaces → pnpm workspaces + Git History Merge        ║"
+echo "║  npm workspaces → pnpm workspaces                            ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
 # Confirmation
-read -p "⚠️  This will modify Git history. Have you created a backup? (y/N): " -n 1 -r
+read -p "⚠️  This will remove nested Git repositories. Have you created a backup? (y/N): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   echo "❌ Migration cancelled. Please backup first."
@@ -884,22 +747,13 @@ bash "$SCRIPT_DIR/01-backup.sh"
 bash "$SCRIPT_DIR/02-install-pnpm.sh"
 bash "$SCRIPT_DIR/03-verify-current-state.sh"
 
-# Phase 2: Git History Preservation
+# Phase 2: Cleanup Nested Git Repositories
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Phase 2: Git History Preservation"
+echo "Phase 2: Cleanup Nested Git Repositories"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-read -p "⚠️  About to merge Git histories. Continue? (y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  echo "❌ Migration cancelled at Phase 2"
-  exit 1
-fi
-
-bash "$SCRIPT_DIR/04-merge-api-core-history.sh"
-bash "$SCRIPT_DIR/05-merge-mobile-history.sh"
-bash "$SCRIPT_DIR/06-verify-merged-history.sh"
+bash "$SCRIPT_DIR/04-remove-nested-git.sh"
 
 # Phase 3: pnpm Migration
 echo ""
@@ -931,7 +785,7 @@ echo "Phase 5: Validation"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 bash "$SCRIPT_DIR/16-validate-installation.sh"
-bash "$SCRIPT_DIR/17-validate-git-history.sh"
+bash "$SCRIPT_DIR/17-validate-repository-structure.sh"
 bash "$SCRIPT_DIR/18-validate-build.sh"
 bash "$SCRIPT_DIR/19-validate-tests.sh"
 bash "$SCRIPT_DIR/20-validate-lint.sh"
@@ -942,10 +796,9 @@ echo "║  ✅ Migration Complete!                                      ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "📋 Next Steps:"
-echo "  1. Review git log to verify history preservation"
-echo "  2. Test all applications: pnpm run dev"
-echo "  3. Commit changes: git add . && git commit -m 'chore: migrate to pnpm monorepo'"
-echo "  4. Push to remote: git push origin main"
+echo "  1. Test all applications: pnpm run dev"
+echo "  2. Commit changes: git add . && git commit -m 'chore: migrate to pnpm monorepo'"
+echo "  3. Push to remote: git push origin main"
 echo ""
 ```
 
@@ -961,8 +814,7 @@ echo ""
 
 ### During Migration
 - [ ] Phase 1 completed without errors
-- [ ] api-core history merged successfully
-- [ ] mobile history merged successfully
+- [ ] Nested .git directories removed
 - [ ] No nested .git directories remain
 - [ ] pnpm-workspace.yaml created
 - [ ] .npmrc configured
@@ -975,8 +827,7 @@ echo ""
 - [ ] `pnpm run build` succeeds
 - [ ] `pnpm run test` succeeds
 - [ ] `pnpm run lint` succeeds
-- [ ] Git history preserved (verify with `git log`)
-- [ ] All commits from subprojects visible
+- [ ] No nested .git directories exist
 - [ ] `pnpm-lock.yaml` generated
 - [ ] Documentation updated
 
@@ -1027,19 +878,7 @@ fi
 
 ## Common Issues and Solutions
 
-### Issue 1: Git filter-branch is slow
-
-**Solution**: This is normal for large repositories. Progress is shown. Be patient.
-
-### Issue 2: Merge conflicts during git merge
-
-**Solution**:
-```bash
-# Accept theirs for conflicts
-git merge --strategy-option theirs temp-api-core
-```
-
-### Issue 3: pnpm install fails
+### Issue 1: pnpm install fails
 
 **Solution**:
 ```bash
@@ -1049,7 +888,7 @@ rm -rf node_modules
 pnpm install --force
 ```
 
-### Issue 4: @cotador/shared not resolving
+### Issue 2: @cotador/shared not resolving
 
 **Solution**:
 ```bash
@@ -1062,15 +901,13 @@ cd ../..
 pnpm install
 ```
 
-### Issue 5: Can't find git histories after merge
+### Issue 3: Nested .git directories still exist
 
 **Solution**:
 ```bash
-# View all history including merged branches
-git log --all --graph --oneline
-
-# View specific path history
-git log --all --follow -- apps/api-core/src/main.ts
+# Manually remove nested .git directories
+rm -rf apps/api-core/.git
+rm -rf apps/mobile/.git
 ```
 
 ---
@@ -1089,7 +926,7 @@ We're migrating Cotador Enterprise from npm workspaces to pnpm workspaces.
 
 What's Changing:
 - npm → pnpm package manager
-- Git histories from api-core and mobile will be merged into main repo
+- Nested Git repositories will be removed (single unified repo)
 - All dependency management through pnpm
 
 What You Need to Do:
@@ -1117,10 +954,10 @@ Thanks,
 
 After migration, verify:
 
-1. **Git History**
-   - All commits from api-core visible: `git log -- apps/api-core`
-   - All commits from mobile visible: `git log -- apps/mobile`
-   - Total commit count increased by subproject commits
+1. **Repository Structure**
+   - Single .git repository at root
+   - No nested .git directories in apps/ or packages/
+   - All applications accessible in monorepo structure
 
 2. **Workspace Functionality**
    - All packages detected: `pnpm list --depth 0`
@@ -1173,19 +1010,6 @@ EOF
 
 ---
 
-## Appendix: Alternative Strategy (Git Submodules)
-
-If subtree merge fails, alternative using git submodules:
-
-```bash
-# Not recommended, but documented for reference
-git submodule add ./apps/api-core apps/api-core
-git submodule add ./apps/mobile apps/mobile
-
-# This preserves history but creates complexity
-# Prefer subtree merge approach above
-```
-
 ---
 
 ## Document Revision History
@@ -1202,8 +1026,7 @@ If migration fails:
 1. Check logs in each script output
 2. Verify backup exists before any destructive operations
 3. Use rollback procedure if needed
-4. Contact DevOps team for Git history issues
-5. Contact Platform team for pnpm configuration issues
+4. Contact Platform team for pnpm configuration issues
 
 ---
 

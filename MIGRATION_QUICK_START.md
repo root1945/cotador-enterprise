@@ -2,7 +2,7 @@
 
 ## TL;DR - Execute Migration
 
-**WARNING**: This modifies Git history. Backup first!
+**WARNING**: This will remove nested Git repositories. Backup first!
 
 ```bash
 cd /home/victoralencar/Code/cotador-enterprise
@@ -13,8 +13,8 @@ bash migration-scripts/00-migrate-to-pnpm-monorepo.sh
 
 ## What This Migration Does
 
-1. **Preserves 100% of Git history** from all repositories (main, api-core, mobile)
-2. **Merges all Git histories** into single unified repository
+1. **Removes nested Git repositories** (api-core, mobile)
+2. **Consolidates into single repository**
 3. **Migrates from npm to pnpm** workspaces
 4. **Configures workspace dependencies** with `@cotador/shared`
 5. **Updates all configuration files** for monorepo structure
@@ -25,7 +25,7 @@ bash migration-scripts/00-migrate-to-pnpm-monorepo.sh
 - [ ] Team notified of migration
 - [ ] CI/CD pipeline will need updates (if exists)
 - [ ] Node.js 20+ installed
-- [ ] You have 15-30 minutes for migration
+- [ ] You have 10-20 minutes for migration
 
 ## Manual Step-by-Step (Alternative)
 
@@ -39,10 +39,8 @@ bash migration-scripts/01-backup.sh
 bash migration-scripts/02-install-pnpm.sh
 bash migration-scripts/03-verify-current-state.sh
 
-# Phase 2: Git History (CRITICAL - cannot be easily undone)
-bash migration-scripts/04-merge-api-core-history.sh
-bash migration-scripts/05-merge-mobile-history.sh
-bash migration-scripts/06-verify-merged-history.sh
+# Phase 2: Cleanup Nested Git Repositories
+bash migration-scripts/04-remove-nested-git.sh
 
 # Phase 3: pnpm Migration
 bash migration-scripts/07-create-pnpm-workspace.sh
@@ -62,7 +60,7 @@ pnpm install
 
 # Phase 5: Validation
 bash migration-scripts/16-validate-installation.sh
-bash migration-scripts/17-validate-git-history.sh
+bash migration-scripts/17-validate-repository-structure.sh
 bash migration-scripts/18-validate-build.sh
 bash migration-scripts/19-validate-tests.sh
 bash migration-scripts/20-validate-lint.sh
@@ -131,16 +129,12 @@ pnpm run format:check
 
 ## Verification After Migration
 
-### 1. Check Git History
+### 1. Check Repository Structure
 ```bash
-# View merged history
-git log --all --graph --oneline -20
+# Verify no nested .git directories
+find apps/ packages/ -name ".git" -type d
 
-# Verify api-core history preserved
-git log --oneline -- apps/api-core | head -10
-
-# Verify mobile history preserved
-git log --oneline -- apps/mobile | head -10
+# Should return nothing (empty)
 ```
 
 ### 2. Check Workspace Structure
@@ -185,14 +179,6 @@ cd packages/shared
 pnpm run build
 cd ../..
 pnpm install
-```
-
-### Issue: Git merge conflicts
-```bash
-# Accept incoming changes
-git checkout --theirs .
-git add .
-git merge --continue
 ```
 
 ### Issue: Build fails after migration
@@ -254,7 +240,6 @@ This will restore from the automatic backup created in Phase 1.
 - [ ] `pnpm run build` succeeds
 - [ ] `pnpm run dev:api` starts successfully
 - [ ] Hot reload works in development
-- [ ] Git history shows commits from all repos
 - [ ] No nested `.git` directories exist
 - [ ] `@cotador/shared` imports work in api-core
 - [ ] `pnpm-lock.yaml` exists at root
@@ -263,20 +248,19 @@ This will restore from the automatic backup created in Phase 1.
 
 ## Next Steps After Migration
 
-1. Review and verify Git history
-2. Test all applications locally
-3. Update CI/CD pipeline configuration
-4. Update documentation with new commands
-5. Commit changes:
+1. Test all applications locally
+2. Update CI/CD pipeline configuration
+3. Update documentation with new commands
+4. Commit changes:
    ```bash
    git add .
-   git commit -m "chore: migrate to pnpm monorepo with preserved history"
+   git commit -m "chore: migrate to pnpm monorepo"
    ```
-6. Push to remote:
+5. Push to remote:
    ```bash
    git push origin main
    ```
-7. Notify team of migration completion
+6. Notify team of migration completion
 
 ## Support
 
@@ -288,6 +272,6 @@ This will restore from the automatic backup created in Phase 1.
 ---
 
 **Migration Date**: 2025-12-18
-**Estimated Duration**: 30-60 minutes
-**Risk Level**: Medium (Git history modification)
+**Estimated Duration**: 20-40 minutes
+**Risk Level**: Low (removes nested Git repos)
 **Rollback**: Available via `migration-scripts/rollback.sh`

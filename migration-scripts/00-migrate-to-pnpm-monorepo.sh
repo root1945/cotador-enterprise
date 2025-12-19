@@ -9,14 +9,14 @@ PROJECT_DIR="/home/victoralencar/Code/cotador-enterprise"
 
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  Cotador Enterprise - Monorepo Migration                     ║"
-echo "║  npm workspaces → pnpm workspaces + Git History Merge        ║"
+echo "║  npm workspaces → pnpm workspaces                            ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "📚 Full documentation: MONOREPO_MIGRATION_PLAN.md"
 echo ""
 
 # Confirmation
-read -p "⚠️  This will modify Git history. Have you created a backup? (y/N): " -n 1 -r
+read -p "⚠️  This will remove nested Git repositories. Have you created a backup? (y/N): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   echo "❌ Migration cancelled. Please backup first."
@@ -37,22 +37,13 @@ bash "$SCRIPT_DIR/01-backup.sh"
 bash "$SCRIPT_DIR/02-install-pnpm.sh"
 bash "$SCRIPT_DIR/03-verify-current-state.sh"
 
-# Phase 2: Git History Preservation
+# Phase 2: Cleanup Nested Git Repositories
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Phase 2: Git History Preservation (CRITICAL)"
+echo "Phase 2: Cleanup Nested Git Repositories"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-read -p "⚠️  About to merge Git histories. This cannot be easily undone. Continue? (y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  echo "❌ Migration cancelled at Phase 2"
-  exit 1
-fi
-
-bash "$SCRIPT_DIR/04-merge-api-core-history.sh"
-bash "$SCRIPT_DIR/05-merge-mobile-history.sh"
-bash "$SCRIPT_DIR/06-verify-merged-history.sh"
+bash "$SCRIPT_DIR/04-remove-nested-git.sh"
 
 # Phase 3: pnpm Migration
 echo ""
@@ -90,7 +81,7 @@ echo "Phase 5: Validation"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 bash "$SCRIPT_DIR/16-validate-installation.sh"
-bash "$SCRIPT_DIR/17-validate-git-history.sh"
+bash "$SCRIPT_DIR/17-validate-repository-structure.sh"
 bash "$SCRIPT_DIR/18-validate-build.sh"
 bash "$SCRIPT_DIR/19-validate-tests.sh"
 bash "$SCRIPT_DIR/20-validate-lint.sh"
@@ -101,13 +92,12 @@ echo "║  ✅ Migration Complete!                                      ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "📋 Next Steps:"
-echo "  1. Review git log: git log --all --graph --oneline -20"
-echo "  2. Test applications: pnpm run dev:api"
-echo "  3. Run tests: pnpm run test"
-echo "  4. Commit changes:"
+echo "  1. Test applications: pnpm run dev:api"
+echo "  2. Run tests: pnpm run test"
+echo "  3. Commit changes:"
 echo "     git add ."
-echo "     git commit -m 'chore: migrate to pnpm monorepo with preserved history'"
-echo "  5. Push to remote: git push origin main"
+echo "     git commit -m 'chore: migrate to pnpm monorepo'"
+echo "  4. Push to remote: git push origin main"
 echo ""
 echo "📄 See MONOREPO_MIGRATION_PLAN.md for detailed documentation"
 echo ""

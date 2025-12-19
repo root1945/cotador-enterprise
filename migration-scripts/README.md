@@ -1,6 +1,6 @@
 # Migration Scripts - npm to pnpm Monorepo
 
-This directory contains automated scripts to migrate Cotador Enterprise from npm workspaces to pnpm workspaces while preserving 100% of Git history.
+This directory contains automated scripts to migrate Cotador Enterprise from npm workspaces to pnpm workspaces, consolidating all applications into a unified monorepo.
 
 ## Quick Start
 
@@ -13,13 +13,11 @@ bash 00-migrate-to-pnpm-monorepo.sh
 
 | Script | Phase | Purpose | Duration | Risk |
 |--------|-------|---------|----------|------|
-| `00-migrate-to-pnpm-monorepo.sh` | Master | Orchestrates entire migration | 30-60min | Medium |
+| `00-migrate-to-pnpm-monorepo.sh` | Master | Orchestrates entire migration | 20-40min | Low |
 | `01-backup.sh` | 1.1 | Creates timestamped backup | 1-2min | Low |
 | `02-install-pnpm.sh` | 1.2 | Installs pnpm globally | 1min | Low |
 | `03-verify-current-state.sh` | 1.3 | Verifies initial state | 1min | Low |
-| `04-merge-api-core-history.sh` | 2.1 | Merges api-core Git history | 5-10min | **High** |
-| `05-merge-mobile-history.sh` | 2.2 | Merges mobile Git history | 5-10min | **High** |
-| `06-verify-merged-history.sh` | 2.3 | Validates merged history | 1min | Low |
+| `04-remove-nested-git.sh` | 2.1 | Removes nested .git directories | <1min | Low |
 | `07-create-pnpm-workspace.sh` | 3.1 | Creates pnpm-workspace.yaml | <1min | Low |
 | `08-create-npmrc.sh` | 3.2 | Creates .npmrc config | <1min | Low |
 | `09-clean-npm-artifacts.sh` | 3.3 | Removes npm artifacts | 1-2min | Low |
@@ -30,7 +28,7 @@ bash 00-migrate-to-pnpm-monorepo.sh
 | `14-update-shared-package.sh` | 4.4 | Updates shared config | <1min | Low |
 | `15-update-gitignore.sh` | 4.5 | Updates .gitignore | <1min | Low |
 | `16-validate-installation.sh` | 5.1 | Validates pnpm setup | 1min | Low |
-| `17-validate-git-history.sh` | 5.2 | Validates Git history | 1min | Low |
+| `17-validate-repository-structure.sh` | 5.2 | Validates repository structure | 1min | Low |
 | `18-validate-build.sh` | 5.3 | Validates builds | 2-5min | Low |
 | `19-validate-tests.sh` | 5.4 | Validates tests | 1-5min | Low |
 | `20-validate-lint.sh` | 5.5 | Validates linting | 1min | Low |
@@ -61,10 +59,8 @@ bash migration-scripts/01-backup.sh
 bash migration-scripts/02-install-pnpm.sh
 bash migration-scripts/03-verify-current-state.sh
 
-# Phase 2: Git History (CRITICAL)
-bash migration-scripts/04-merge-api-core-history.sh
-bash migration-scripts/05-merge-mobile-history.sh
-bash migration-scripts/06-verify-merged-history.sh
+# Phase 2: Cleanup Nested Git Repositories
+bash migration-scripts/04-remove-nested-git.sh
 
 # Phase 3: pnpm Setup
 bash migration-scripts/07-create-pnpm-workspace.sh
@@ -86,47 +82,35 @@ cd migration-scripts
 
 # Phase 5: Validation
 bash migration-scripts/16-validate-installation.sh
-bash migration-scripts/17-validate-git-history.sh
+bash migration-scripts/17-validate-repository-structure.sh
 bash migration-scripts/18-validate-build.sh
 bash migration-scripts/19-validate-tests.sh
 bash migration-scripts/20-validate-lint.sh
 ```
 
-## Critical Phase: Git History Preservation
+## Phase 2: Cleanup Nested Git Repositories
 
-**Scripts 04-06 modify Git history permanently.**
+**Script 04 removes nested Git repositories.**
 
 ### What Happens
 
-1. **Script 04** (api-core):
-   - Adds `apps/api-core/.git` as remote
-   - Fetches its history
-   - Reorganizes files into `apps/api-core/` path
-   - Merges history into main repo
-   - Removes nested `.git`
-
-2. **Script 05** (mobile):
-   - Same process for mobile repository
-   - Skips if no commits exist
-
-3. **Script 06** (verification):
-   - Confirms all histories merged
-   - Verifies no nested repos
-   - Shows sample commits
+1. **Script 04** (remove-nested-git):
+   - Removes `apps/api-core/.git` directory if it exists
+   - Removes `apps/mobile/.git` directory if it exists
+   - Verifies no nested .git directories remain
+   - All application files remain intact
 
 ### Before Running
 
 - **BACKUP**: Script 01 creates automatic backup
 - **COMMIT**: All changes should be committed
 - **UNDERSTAND**: Read MONOREPO_MIGRATION_PLAN.md
-- **TIME**: Allow 15-20 minutes for Git operations
 
 ### What Cannot Be Undone
 
-Once Git histories are merged:
-- Original separate repositories lost
-- History rewrite affects all commits
-- Force push would be required to remote
+Once nested .git directories are removed:
+- Separate repository metadata is lost
+- Files remain, but Git history from nested repos is not preserved
 
 **Solution**: Use `rollback.sh` to restore from backup.
 
@@ -160,9 +144,7 @@ This will:
 ├── 01-backup.sh (no dependencies)
 ├── 02-install-pnpm.sh (requires npm)
 ├── 03-verify-current-state.sh (requires git)
-├── 04-merge-api-core-history.sh (requires git, 03)
-├── 05-merge-mobile-history.sh (requires git, 03, 04)
-├── 06-verify-merged-history.sh (requires 04, 05)
+├── 04-remove-nested-git.sh (no dependencies)
 ├── 07-create-pnpm-workspace.sh (no dependencies)
 ├── 08-create-npmrc.sh (no dependencies)
 ├── 09-clean-npm-artifacts.sh (no dependencies)
@@ -173,7 +155,7 @@ This will:
 ├── 14-update-shared-package.sh (requires node)
 ├── 15-update-gitignore.sh (no dependencies)
 ├── 16-validate-installation.sh (requires pnpm, 10)
-├── 17-validate-git-history.sh (requires git, 06)
+├── 17-validate-repository-structure.sh (requires git, 04)
 ├── 18-validate-build.sh (requires pnpm, 10)
 ├── 19-validate-tests.sh (requires pnpm, 10)
 └── 20-validate-lint.sh (requires pnpm, 10)
@@ -195,24 +177,9 @@ All scripts use `set -e` to exit on error. If any script fails:
 npm install -g pnpm
 ```
 
-**"remote already exists"**
-```bash
-cd /home/victoralencar/Code/cotador-enterprise
-git remote remove api-core-repo
-git remote remove mobile-repo
-```
-
 **"No such file or directory"**
 - Verify you're running from correct directory
 - Check that expected files/directories exist
-
-**"Merge conflict"**
-```bash
-# Accept incoming changes
-git checkout --theirs .
-git add .
-git merge --continue
-```
 
 ## Testing Scripts (Development)
 
@@ -227,7 +194,7 @@ cd /tmp/cotador-test
 bash migration-scripts/00-migrate-to-pnpm-monorepo.sh
 
 # Verify
-git log --graph --oneline -20
+find apps/ packages/ -name ".git" -type d
 pnpm list --depth 0
 ```
 
@@ -295,7 +262,7 @@ After successful migration:
 - Scripts are idempotent where possible
 - Some scripts create `.backup` files
 - Backups kept for safety (manual cleanup)
-- Git history modifications are permanent
+- Nested Git repositories are removed (files remain)
 - pnpm lock file is generated automatically
 
 ---

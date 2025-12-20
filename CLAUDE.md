@@ -4,7 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Cotador Enterprise is a high-scale SaaS platform for service pricing and management. It's built as a monorepo with multiple apps and shared packages, following Clean Architecture principles with strict TypeScript enforcement.
+Cotador Enterprise is a high-scale SaaS platform for service pricing and management. It's built as a monorepo using **pnpm workspaces** with multiple apps and shared packages, following Clean Architecture principles with strict TypeScript enforcement.
+
+### Package Manager
+
+This project uses **pnpm** (not npm) for dependency management. pnpm provides efficient disk space usage through content-addressable storage and strict dependency resolution.
+
+**Key Points:**
+
+- All packages are scoped under `@cotador/*` namespace (e.g., `@cotador/shared`)
+- pnpm commands don't require the `run` keyword for scripts: use `pnpm test` instead of `pnpm run test`
+- Workspace dependencies are automatically linked by pnpm
+- The `pnpm-workspace.yaml` file defines workspace packages
 
 ## Project Structure
 
@@ -25,7 +36,7 @@ cotador-enterprise/
 
 ```bash
 # Install dependencies (root and workspaces)
-npm install
+pnpm install
 
 # Start infrastructure (PostgreSQL, RabbitMQ, Redis)
 docker-compose up -d
@@ -46,48 +57,52 @@ docker-compose logs -f [service_name]
 cd apps/api-core
 
 # Development
-npm run start:dev          # Start with hot-reload
-npm run start:debug        # Start with debugger
-npm run build              # Production build
-npm run start:prod         # Start production
+pnpm start:dev             # Start with hot-reload
+pnpm start:debug           # Start with debugger
+pnpm build                 # Production build
+pnpm start:prod            # Start production
 
 # Database
-npx prisma migrate dev     # Run migrations in dev
-npx prisma migrate deploy  # Run migrations in production
-npx prisma studio          # Open Prisma Studio GUI
-npx prisma generate        # Regenerate Prisma Client
+pnpm prisma migrate dev    # Run migrations in dev
+pnpm prisma migrate deploy # Run migrations in production
+pnpm prisma studio         # Open Prisma Studio GUI
+pnpm prisma generate       # Regenerate Prisma Client
 
 # Testing
-npm run test               # Run unit tests
-npm run test:watch         # Run tests in watch mode
-npm run test:cov           # Run with coverage
-npm run test:e2e           # Run e2e tests
-npm run test:debug         # Debug tests
+pnpm test                  # Run unit tests
+pnpm test:watch            # Run tests in watch mode
+pnpm test:cov              # Run with coverage
+pnpm test:e2e              # Run e2e tests
+pnpm test:debug            # Debug tests
 
 # Code Quality
-npm run lint               # Run ESLint
-npm run format             # Format with Prettier
+pnpm lint                  # Run ESLint
+pnpm format                # Format with Prettier
 ```
 
 ### Shared Package (packages/shared)
 
 ```bash
 cd packages/shared
-npm run build              # Compile TypeScript
-npm run lint               # Run linter
+pnpm build                 # Compile TypeScript
+pnpm lint                  # Run linter
 ```
 
 ### Root Level
 
 ```bash
 # Lint all workspaces
-npm run lint
+pnpm lint
 
 # Format all files
-npm run format
+pnpm format
 
 # Test all workspaces
-npm run test
+pnpm test
+
+# Run command in specific workspace
+pnpm --filter @cotador/api-core test
+pnpm --filter @cotador/shared build
 ```
 
 ### Infrastructure Scripts
@@ -113,6 +128,7 @@ Infra (Controllers, Repositories) → Application (Use Cases) → Domain (Entiti
 **CRITICAL**: Domain layer NEVER imports from Application or Infra layers.
 
 **Directory Structure (api-core/src/):**
+
 - `domain/` - Entities, value objects, domain exceptions, repository interfaces
 - `application/` - Use cases, application DTOs
 - `infra/` - Controllers, Prisma repositories, NestJS modules, config
@@ -153,11 +169,13 @@ The system implements Row-Level Security (RLS) with `tenantId` on all critical t
 ### Domain Layer Rules
 
 **NEVER:**
+
 - Import from `infra/` or `application/` in `domain/`
 - Use framework decorators in entities
 - Access database directly from domain
 
 **ALWAYS:**
+
 - Keep business logic in domain layer
 - Define repository interfaces in `domain/repositories/`
 - Throw domain exceptions from `domain/exceptions/`
@@ -165,22 +183,24 @@ The system implements Row-Level Security (RLS) with `tenantId` on all critical t
 ### Database Migrations
 
 1. Modify `apps/api-core/prisma/schema.prisma`
-2. Run `npx prisma migrate dev --name descriptive_migration_name`
+2. Run `pnpm prisma migrate dev --name descriptive_migration_name`
 3. Review generated SQL in `prisma/migrations/`
 4. Commit both schema and migration files
-5. Team members run `npx prisma migrate deploy` after pulling
+5. Team members run `pnpm prisma migrate deploy` after pulling
 
 ### Shared Package
 
 Event contracts and types go in `packages/shared/`:
+
 - Event schemas with Zod validation
 - Shared TypeScript interfaces
 - Common DTOs used across services
 
 After changes:
+
 ```bash
 cd packages/shared
-npm run build
+pnpm build
 ```
 
 ## Important Files
@@ -196,6 +216,7 @@ npm run build
 ### Required Services
 
 - Node.js 20+
+- pnpm 8+ (install globally: `npm install -g pnpm`)
 - Docker and Docker Compose
 - PostgreSQL 15+ (via Docker)
 - RabbitMQ 3+ (via Docker)
@@ -204,6 +225,7 @@ npm run build
 ### Environment Variables
 
 Copy `apps/api-core/.env.example` to `apps/api-core/.env` and configure:
+
 - Database connection string
 - RabbitMQ connection string
 - Redis connection string
@@ -223,13 +245,14 @@ Copy `apps/api-core/.env.example` to `apps/api-core/.env` and configure:
 
 ### Before Committing
 
-1. Ensure lint passes: `npm run lint`
-2. Ensure tests pass: `npm run test`
+1. Ensure lint passes: `pnpm lint`
+2. Ensure tests pass: `pnpm test`
 3. Pre-commit hooks will enforce this automatically
 
 ### Common Patterns
 
 **Creating a new use case:**
+
 1. Define repository interface in `domain/repositories/`
 2. Create use case in `application/use-cases/`
 3. Implement repository in `infra/database/repositories/`
@@ -237,6 +260,7 @@ Copy `apps/api-core/.env.example` to `apps/api-core/.env` and configure:
 5. Register in appropriate NestJS module
 
 **Adding a new domain entity:**
+
 1. Create entity class in `domain/entities/`
 2. Add validation logic and business rules in entity methods
 3. Create/update repository interface
@@ -245,16 +269,24 @@ Copy `apps/api-core/.env.example` to `apps/api-core/.env` and configure:
 ## Common Issues
 
 **Prisma Client out of sync:**
+
 ```bash
 cd apps/api-core
-npx prisma generate
+pnpm prisma generate
 ```
 
 **Port conflicts:**
 Check if ports 5432 (PostgreSQL), 5672/15672 (RabbitMQ), 6379 (Redis) are available.
 
 **Module resolution errors:**
-Ensure `@cotador/shared` is built: `cd packages/shared && npm run build`
+Ensure `@cotador/shared` is built: `cd packages/shared && pnpm build`
+
+**pnpm workspace issues:**
+If dependencies aren't resolving correctly, try:
+
+```bash
+pnpm install --force
+```
 
 **Database connection errors:**
 Verify Docker containers are running: `docker-compose ps`

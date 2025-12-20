@@ -26,7 +26,7 @@ git clone <repo-url>
 cd cotador-enterprise
 
 # Instale dependências
-npm install
+pnpm install
 
 # Inicie a infraestrutura (PostgreSQL, RabbitMQ, Redis)
 docker-compose up -d
@@ -37,10 +37,10 @@ cp apps/api-core/.env.example apps/api-core/.env
 
 # Execute migrations
 cd apps/api-core
-npm run db:migrate
+pnpm db:migrate
 
 # Inicie a API
-npm run start:dev
+pnpm start:dev
 ```
 
 ## 📁 Estrutura do Projeto
@@ -61,11 +61,11 @@ cotador-enterprise/
 
 ```bash
 # Desenvolvimento
-npm run dev              # Inicia todos os serviços em modo dev
-npm run test             # Roda testes
-npm run test:cov         # Testes com cobertura
-npm run lint             # Verifica código
-npm run format           # Formata código
+pnpm dev                 # Inicia todos os serviços em modo dev
+pnpm test                # Roda testes
+pnpm test:cov            # Testes com cobertura
+pnpm lint                # Verifica código
+pnpm format              # Formata código
 
 # Docker
 docker-compose up -d     # Inicia infraestrutura

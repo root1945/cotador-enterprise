@@ -1,6 +1,13 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
-  }
+    "strict": true,
+    "composite": true,
+    "baseUrl": "./",
+    "paths": {
+      "@cotador/shared": ["../../packages/shared/src/index.ts"],
+      "@cotador/shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "references": [{ "path": "../../packages/shared" }]
 }

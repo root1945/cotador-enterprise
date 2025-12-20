@@ -1,0 +1,129 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "**/.env.*local",
+    ".env",
+    "tsconfig.json",
+    "pnpm-workspace.yaml"
+  ],
+  "globalEnv": ["NODE_ENV", "DATABASE_URL", "RABBITMQ_URL", "REDIS_URL"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "prisma/**", "tsconfig.json", "package.json"],
+      "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**"],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.spec.ts",
+        "test/**",
+        "jest.config.*",
+        "tsconfig.json"
+      ],
+      "outputs": ["coverage/**"],
+      "cache": true
+    },
+    "test:watch": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "test:cov": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts", "src/**/*.spec.ts", "test/**", "jest.config.*"],
+      "outputs": ["coverage/**"],
+      "cache": true
+    },
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "test/**", "jest.config.*"],
+      "outputs": [],
+      "cache": false
+    },
+    "test:debug": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "lint": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "test/**/*.ts",
+        "eslint.config.*",
+        ".eslintrc.*",
+        "tsconfig.json"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "lint:fix": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts"],
+      "outputs": [],
+      "cache": false
+    },
+    "format": {
+      "inputs": ["**/*.ts", "**/*.tsx", "**/*.json", "**/*.md", ".prettierrc*"],
+      "outputs": [],
+      "cache": false
+    },
+    "format:check": {
+      "inputs": ["**/*.ts", "**/*.tsx", "**/*.json", "**/*.md", ".prettierrc*"],
+      "outputs": [],
+      "cache": true
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "start:dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "start:debug": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "start:prod": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true
+    },
+    "prisma:generate": {
+      "inputs": ["prisma/schema.prisma"],
+      "outputs": ["node_modules/.prisma/**"],
+      "cache": true
+    },
+    "prisma:migrate": {
+      "dependsOn": ["prisma:generate"],
+      "inputs": ["prisma/schema.prisma", "prisma/migrations/**"],
+      "outputs": [],
+      "cache": false
+    },
+    "prisma:migrate:deploy": {
+      "dependsOn": ["prisma:generate"],
+      "inputs": ["prisma/schema.prisma", "prisma/migrations/**"],
+      "outputs": [],
+      "cache": false
+    },
+    "prisma:studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

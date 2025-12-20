@@ -8,11 +8,11 @@ Guia rápido de configuração do ambiente de desenvolvimento.
 
 ```bash
 # Na raiz do projeto
-npm install
+pnpm install
 
 # Ou em cada app individualmente
-cd apps/api-core && npm install
-cd apps/mobile && npm install
+cd apps/api-core && pnpm install
+cd apps/mobile && pnpm install
 ```
 
 ### 2. Configurar Variáveis de Ambiente
@@ -46,17 +46,17 @@ docker-compose logs -f
 cd apps/api-core
 
 # Rodar migrations
-npm run db:migrate
+pnpm db:migrate
 
 # (Opcional) Abrir Prisma Studio para visualizar dados
-npm run db:studio
+pnpm db:studio
 ```
 
 ### 5. Configurar Git Hooks (Husky)
 
 ```bash
 # Na raiz do projeto
-npm run prepare
+pnpm prepare
 
 # Isso configura os hooks:
 # - pre-commit: Valida código e detecta secrets
@@ -69,7 +69,7 @@ npm run prepare
 cd apps/api-core
 
 # Modo desenvolvimento (com hot reload)
-npm run start:dev
+pnpm start:dev
 
 # A API estará disponível em:
 # http://localhost:3000/api/v1
@@ -102,15 +102,15 @@ curl -X POST http://localhost:3000/api/v1/budgets \
 
 ```bash
 cd apps/api-core
-npm run lint
+pnpm lint
 ```
 
 ### Rodar Testes
 
 ```bash
 cd apps/api-core
-npm run test
-npm run test:cov  # Com cobertura
+pnpm test
+pnpm test:cov     # Com cobertura
 ```
 
 ## 🐛 Troubleshooting
@@ -134,7 +134,7 @@ Verifique se todas as variáveis obrigatórias estão no `.env`:
 
 ```bash
 # Reinstalar hooks
-npm run prepare
+pnpm prepare
 
 # Verificar permissões
 chmod +x .husky/pre-commit

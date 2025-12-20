@@ -13,6 +13,7 @@
     "incremental": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "composite": true,
 
     "strict": true,
     "noImplicitAny": true,
@@ -40,5 +41,10 @@
     "coverage",
     "**/node_modules",
     "**/dist"
+  ],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./apps/api-core" },
+    { "path": "./apps/mobile" }
   ]
 }

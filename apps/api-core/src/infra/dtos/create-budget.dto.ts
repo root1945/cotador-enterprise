@@ -1,10 +1,25 @@
+import { IsString, IsNumber, IsArray, ValidateNested, IsPositive, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+
 export class CreateBudgetItemDto {
-  description: string;
-  price: number;
-  qty: number;
+  @IsString()
+  description!: string;
+
+  @IsNumber()
+  @IsPositive()
+  price!: number;
+
+  @IsNumber()
+  @Min(1)
+  qty!: number;
 }
 
 export class CreateBudgetDto {
-  clientName: string;
-  items: CreateBudgetItemDto[];
+  @IsString()
+  clientName!: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateBudgetItemDto)
+  items!: CreateBudgetItemDto[];
 }
